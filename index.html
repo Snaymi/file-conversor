@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Processor</title>
+    <link rel="stylesheet" href="/css/style.css">
+    
+</head>
+<body>
+    <div class="header container">
+        <h1> 📂Upload ➡️ 🤖 LLM ➡️🗃️Download</h1>
+        <p>Sistema inteligente de processamento de arquivos</p>
+    </div>
+    <div class="upload-section container">
+        <div class="upload-area " id ="upload-area">
+            <div class="upload-icon">
+                📂
+            </div>
+            <div class="upload-text">
+                Arraste seus arquivos aqui ou clique para selecionar
+            </div>
+            <button class="btn" on-click="document.getElementById('file-input').click()">Selecionar Arquivos</button>
+            <div class="file-info">
+                <strong>Tipos de arquivos suportados:</strong>
+                CSV, excel (xlsx), PDF <br>
+                <strong>Tamanho máximo:</strong> 25MB por arquivo
+            </div>
+        </div>
+    </div>
+    <div class="process container">
+        <h2>📊 Processamentos</h2>
+        <div id="process-area">
+            <div id="empty-state">
+                <div class="empty-icon">🗄️</div>
+                <p>Nenhum arquivo processado ainda <br> Faça upload de um arquivo para começar!</p>
+            </div>
+
+        </div>
+    </div>
+</body>
+</html>
