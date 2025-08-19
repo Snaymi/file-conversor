@@ -6,15 +6,19 @@
 body {
 background: linear-gradient(135deg, #93c5fd, #a5b4fc);
 }
+p{
+    margin: 15px 0;
+}
+input{
+    display:none;
+}
 .container{
     width: 1000px;
     margin: 0 auto;
     background: #fff;
     padding: 20px;
 }
-p{
-    margin: 15px 0;
-}
+
 .header{
     text-align: center;
     font-weight: 700;
@@ -63,4 +67,8 @@ transition: all 200ms ease;
     font-size: 4rem;
     color: #cbd5e0;
 }
+.file-content{
+    background-color: #000;
+}
+
 
