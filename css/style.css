@@ -19,8 +19,8 @@ p{
     text-align: center;
     font-weight: 700;
     color: #2d3748;
-    --webkit-text-fill-color: transparent;
-    --webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -webkit-background-clip: text;
 }
 .upload-area{
     text-align: center;

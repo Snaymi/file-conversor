@@ -20,7 +20,8 @@
             <div class="upload-text">
                 Arraste seus arquivos aqui ou clique para selecionar
             </div>
-            <button class="btn" on-click="document.getElementById('file-input').click()">Selecionar Arquivos</button>
+            <button class="btn" onclick="document.getElementById('file-input').click()">Selecionar Arquivos</button>
+            <input type="file" id="file-input" style="display: none;"/>
             <div class="file-info">
                 <strong>Tipos de arquivos suportados:</strong>
                 CSV, excel (xlsx), PDF <br>
