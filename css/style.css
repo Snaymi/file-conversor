@@ -69,6 +69,9 @@ transition: all 200ms ease;
 }
 .file-content{
     background-color: #000;
+    color: #FFF;
+    white-space: pre-wrap;
+    text-align: left;   
 }
 
 

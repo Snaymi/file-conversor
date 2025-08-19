@@ -20,7 +20,13 @@
 
                 //Cria um elemento para mostrar o conteúdo
                 const output = document.createElement('pre');
+                //Ela exibe o texto exatamente como está, mantendo
+
+                //insere o conteúdo do arquivo dentro:
                 output.textContent = content;
+                
+                //Estiliza:
+                output.classList.add('file-content')
 
                 //Adiciona um área de processamento
                 processArea.append(output);
