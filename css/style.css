@@ -12,6 +12,11 @@ p{
 input{
     display:none;
 }
+pre{
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: monospace;
+}
 .container{
     width: 1000px;
     margin: 0 auto;
@@ -78,6 +83,19 @@ transition: all 200ms ease;
 }
 .C170-content{
     background-color: blue;
+}.C190-content{
+    background-color: yellow;
 }
-
+.colunas{
+    display: flex;
+    justify-content: space-between;
+    margin-top: 50px;
+}
+.conteudo{
+    background-color: #cbd5e0;
+}
+.erro{
+    color: #000;
+    background-color: green;
+}
 
