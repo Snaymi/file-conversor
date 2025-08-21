@@ -133,8 +133,11 @@ fileInput.addEventListener('change', function () {
                 //Replace - Troca vírgula por ponto para fazer a conversão
                 // Se for um valor inválido retorna NaN
                 // || 0 - Caso dê tudo erraod substitua por 0 para não quebrar a app.
-                notas.push({
-                    chave, valorNota, itens: [], impostos: []
+                notas.push({ //"push" - adiciona um objeto no final do array "notas"
+                    chave, //Variável (identificador)
+                    valorNota, //Variável (valor da NF)
+                    itens: [],//inicia uma array vazio chamado "itens" 
+                    impostos: []//inicia um array vazio chamado "impostos"
                 });
             }
             if (linha.includes('|C170|')) {
@@ -163,8 +166,22 @@ fileInput.addEventListener('change', function () {
             const totalCalculado = somaItens + somaImpostos;
 
             // Comparação com tolerância de arredondamento
-            if (Math.abs(nota.valorNota - totalCalculado) > 0.01) {
+            //Math.abs(...) - Pega o valor da diferença (sendo positivo ou negativo)
+            if (Math.abs(nota.valorNota - totalCalculado) > 0.01) //verifica se há diferença entre o valor declarado da nota e o total calculado(soma dos itens + impostos)
+            //nota.valorNota: valor que veio da nota fiscal (que foi declarado)
+            //totalCalculado: soma dos itens(somaItens) + impostos (somaImpostos)
+            //nota.valorNota - totalCalculado: diferença entre o valor declarado e o valor calculado.
+            //>0,1 -> Se a diferença for maior que 1 centavo acusa um erro.
+            {
+                //erros.push(...) --> adiciona uma mensagem ao array "erros"
+                //erros --> guarda tudo encontrado
+                //.push--> adiciona um item no final da lista
                 erros.push(`Nota ${nota.chave} (linha ${i + 1}): valor declarado (${nota.valorNota.toFixed(2)}) difere da soma de itens (${somaItens.toFixed(2)}) + impostos (${somaImpostos.toFixed(2)}).`);
+                //${nota.chave}: mostra a cahve da nota(identificador único)
+                //${i + 1}: mostra o número da linha (indice do array + 1)
+                //${nota.valorNota.toFixed(2)}: mostra o valor declarado com 2 casas DECIMAIS
+                //${somaItens.toFixed(2)} e ${somaImpostos.toFixed(2)}: mostram os valores calculados com 2 casas decimais.
+                
             }
         });
 
