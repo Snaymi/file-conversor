@@ -77,9 +77,11 @@
                 //"prepend -- Adiciona no começo do elemento PAI"
                 document.getElementById('coluna-c170').prepend(tituloC170);
 
+                //Mostra a quantidadde de blocos C190:
                 const tituloC190 = document.createElement('h3');
                 tituloC190.textContent = `Blocos C190 encontrados: ${quantidadeC190}`;
                 tituloC190.classList.add('C190-content');
+                //prepend -- Adiciona no começo do elemento PAI
                 document.getElementById('coluna-c190').prepend(tituloC190);
 
                 //Exibe o conteúdo dos blocos em suas respectivas colunas:
@@ -111,7 +113,7 @@
                 const areaErros = document.getElementById('area-erros');
                 areaErros.textContent = erros.length > 0
                 ? erros.join('\n') // mostra erros, linha por linha
-                : 'nenhum erro encontrado'; // se não houver erros mostra a mensagem
+                : 'Nenhum Erro encontrado'; // se não houver erros mostra a mensagem
         };
-        reader.readAsText(file)
+        reader.readAsText(file);
     })

@@ -79,7 +79,7 @@ transition: all 200ms ease;
     text-align: left;   
 }
 .C100-content{
-    background-color: red;
+    background-color: green;
 }
 .C170-content{
     background-color: blue;
@@ -95,7 +95,7 @@ transition: all 200ms ease;
     background-color: #cbd5e0;
 }
 .erro{
-    color: #000;
-    background-color: green;
+    color: #fff;
+    background-color: red;
 }
 
