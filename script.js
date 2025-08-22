@@ -1,4 +1,4 @@
-//Seleciona o iput do arquivo
+//Seleciona o input do arquivo
 const fileInput = document.getElementById('file-input');
 
 //Seleciona a area onde o conteúdo será exibido.
@@ -78,7 +78,7 @@ fileInput.addEventListener('change', function () {
         //"prepend -- Adiciona no começo do elemento PAI"
         //document.getElementById('coluna-c170').prepend(tituloC170);
 
-        //Mostra a quantidadde de blocos C190:
+        //Mostra a quantidade de blocos C190:
         //const tituloC190 = document.createElement('h3');
         //tituloC190.textContent = `Blocos C190 encontrados: ${quantidadeC190}`;
         //tituloC190.classList.add('C190-content');
@@ -160,10 +160,26 @@ fileInput.addEventListener('change', function () {
             }
 
         });
+        //notas - array que contém várias notas fiscais
+        //forEach - método que percorre cada item desse array
+        //nota - é o objeto atual(a nota que esta sendo analisada)
+        //i - índice da nota no array (começa no 0)
+        //Geral - Para cada nota neste array faça isso...
         notas.forEach((nota, i) => {
+            //notas.itens - array com valores dos itens da nota analisada no momento.
             const somaItens = nota.itens.reduce((acc, val) => acc + val, 0);
+            //reduce - é um método que soma Todos os valores desse array.
+            //acc - acumulador (começa no 0)
+            //val - valor atual do que está sendo somado
+            //acc + val -> soma o acumulador com valor total
+            //Geral - somaItens vai guardar o total dos valores dos produtos dessa nota.
+
+            //segue a mesma lógica anterior, mas agora com impostos:
             const somaImpostos = nota.impostos.reduce((acc, val) => acc + val, 0);
             const totalCalculado = somaItens + somaImpostos;
+            
+
+
 
             // Comparação com tolerância de arredondamento
             //Math.abs(...) - Pega o valor da diferença (sendo positivo ou negativo)
@@ -176,7 +192,7 @@ fileInput.addEventListener('change', function () {
                 //erros.push(...) --> adiciona uma mensagem ao array "erros"
                 //erros --> guarda tudo encontrado
                 //.push--> adiciona um item no final da lista
-                erros.push(`Nota ${nota.chave} (linha ${i + 1}): valor declarado (${nota.valorNota.toFixed(2)}) difere da soma de itens (${somaItens.toFixed(2)}) + impostos (${somaImpostos.toFixed(2)}).`);
+                erros.push(`Nota ${nota.chave} (linha ${i + 1}): Declarado (${nota.valorNota.toFixed(2)}) difere da soma de itens (${somaItens.toFixed(2)}) + Impostos (${somaImpostos.toFixed(2)}).`);
                 //${nota.chave}: mostra a cahve da nota(identificador único)
                 //${i + 1}: mostra o número da linha (indice do array + 1)
                 //${nota.valorNota.toFixed(2)}: mostra o valor declarado com 2 casas DECIMAIS
