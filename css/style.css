@@ -95,7 +95,7 @@ transition: all 200ms ease;
     background-color: #cbd5e0;
 }
 .erro{
-    text-align: start;
+    text-align: center;
     color: #fff;
     background-color: #f44336;
     border: #000 1px solid;

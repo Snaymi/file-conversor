@@ -24,7 +24,7 @@
             <input type="file" id="file-input"/>
             <div class="file-info">
                 <strong>Tipos de arquivos suportados:</strong>
-                .txt <br>
+                .PDF <br>
                 <strong>Tamanho máximo:</strong> Ainda não definido
             </div>
         </div>
@@ -35,26 +35,19 @@
             <pre id="area-erros" class="erro"></pre>
             <div id="empty-state">
                 <div class="empty-icon">🗄️</div>
-                <p>Nenhum arquivo processado ainda <br> 
+                <p>Nenhum arquivo convertido ainda <br> 
                     Faça upload de um arquivo para começar!</p>
             </div>
             <div class="quantidade"></div>
-            <div class="colunas">
-                <div class="coluna" id="coluna-c100">
-                    <h4>Blocos C100</h4>
-                    <pre class="conteudo" id="conteudo-c100"></pre>
-                </div>
-                <div class="coluna" id="coluna-c170">
-                    <h4>Blocos C170</h4>
-                    <pre class="conteudo" id="conteudo-c170"></pre>
-                </div>
-                <div class="coluna" id="coluna-c190">
-                    <h4>Blocos C190</h4>
-                    <pre class="conteudo" id="conteudo-c190"></pre>
-                </div>
-            </div>
+            
         </div>
     </div>
+    <!--bibliotecas necessárias-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!--Meu script-->
     <script src="script.js"></script>
 </body>
 </html>
