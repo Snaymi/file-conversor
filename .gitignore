@@ -8,3 +8,5 @@
 /node_modules/sprintf-js
 /node_modules/serialize-error
 /node_modules
+*.wasm
+*.default
