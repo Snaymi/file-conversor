@@ -1,5 +1,5 @@
 //Cria o Web Worker da Aspose
-const AsposePdfWebWorker = new Worker("AsposePDFforJS.js");
+const AsposePdfWebWorker = new Worker("./aspose/AsposePDFforJS.js");
 
 //Lida com erros do Worker
 AsposePdfWebWorker.onerror = evt => {
