@@ -20,7 +20,7 @@
             <div class="upload-text">
                 Arraste seus arquivos aqui ou clique para selecionar
             </div>
-            <button class="btn" onclick="document.getElementById('file-input').click()">Selecionar Arquivos</button>
+            <button class="btn" id="btn-arquivo">Selecionar Arquivos</button>
             <input type="file" id="file-input"/>
             <div class="file-info">
                 <strong>Tipos de arquivos suportados:</strong>
@@ -43,9 +43,9 @@
         </div>
     </div>
     <!--bibliotecas necessárias-->
-    <script src="./aspose/AsposePDFforJS.js"></script>
-
-
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <!--Meu script-->
     <script src="script.js"></script>

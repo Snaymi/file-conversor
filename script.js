@@ -1,38 +1,36 @@
-//Cria o Web Worker da Aspose
-const AsposePdfWebWorker = new Worker("./aspose/AsposePDFforJS.js");
+document.addEventListener('DOMContentLoaded', function () {
+    console.log('DOM CARREGADA');
 
-//Lida com erros do Worker
-AsposePdfWebWorker.onerror = evt => {
-  document.getElementById('area-erros').textContent = `Erro: ${evt.message}`;
+    const btn = document.getElementById('btn-arquivo');
+    const arquivo = document.getElementById('file-input');
 
-};
+    if (!btn) {
+        console.error('Botão #btn-arquivo não encontrado!');
+        return;
+    }
 
-//Lida com Mensagens do Worker
-AsposePdfWebWorker.onmessage = evt => {
-  if (evt.data === 'ready') {
-    console.log ('Aspose PDF worker Carregado')
-    return;
-  }
-  const { json } = evt.data;
-  if (json.errorCode === 0) {
-    const textoExtraido = json.text;
-    processarTexto(textoExtraido); //Função que vou criar
-    console.log(textoExtraido);
-  } else {
-    document.getElementById('area-erros').textContent = `Erro ${json.errorText}`;
-  }
-};
-//Captura o arquivo PDF
-document.getElementById('file-input').addEventListener('change', e => {
-  const file = e.target.files[0];
-  const reader = new FileReader();
+    if (!arquivo) {
+        console.error('Elemento #file-input não encontrado!');
+        return;
+    }
 
-  reader.onload = event => {
-    AsposePdfWebWorker.postMessage ({
-      operation: 'getText', //pensar se compensa usar "getTable"
-      params:[event.target.result]
-    }, [event.target.result]);
-  }
-  reader.readAsArrayBuffer(file);
-}
-)
+    btn.addEventListener('click', function () {
+        console.log('Abrindo box para receber arquivo.');
+        arquivo.click(); // Simula o clique no input de arquivo
+    });
+
+    arquivo.addEventListener('change', function () {
+        console.log('Evento disparado para identificação do arquivo');
+        const file = arquivo.files[0];
+        if (file) {
+            console.log('Arquivo Recebido!');
+            console.log('Nome:', file.name);
+            console.log('Tipo:', file.type);
+            const tamanhoMB = (file.size / (1024 * 1024)).toFixed(2);
+            console.log('Tamanho do arquivo:', tamanhoMB, 'MB');
+            console.log(arquivo);
+        } else {
+            console.log('Nenhum arquivo selecionado');
+        }
+    });
+});
