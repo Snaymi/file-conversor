@@ -13,21 +13,24 @@ document.addEventListener('DOMContentLoaded', function () {
         console.error('❌ Elemento #file-input não encontrado no DOM');
         return;
     }
-
+    console.log('Passou sem erros ✅ evento CLICK carregado ✅')
     btn.addEventListener('click', function () {
         console.log('🖱️ Botão clicado — abrindo seletor de arquivos');
         arquivo.click(); // Simula o clique no input de arquivo
+        console.log('Click interagido ✅')
     });
 
     arquivo.addEventListener('change', function () {
         console.log('📤 Evento disparado — identificando o arquivo selecionado');
         const file = arquivo.files[0];
+        console.log('🔁 Arquivo recebido, analisando 🔁')
 
         if (file) {
             console.log('📄 Arquivo Recebido com sucesso!');
             console.log('🔤 Nome do arquivo:', file.name);
             console.log('📦 Tipo do arquivo:', file.type);
             const tamanhoMB = (file.size / (1024 * 1024)).toFixed(2);
+            console.log('Tamanho convertido de KB para MB (valor aproximado) ✅')
             console.log('📏 Tamanho do arquivo:', tamanhoMB, 'MB');
             console.log('📁 Elemento input de arquivo:', arquivo);
 
