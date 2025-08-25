@@ -40,10 +40,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Quando o arquivo for carregado
             reader.onload = async function (event) {
-                console.log('📚 Arquivo lido como ArrayBuffer — iniciando processamento com pdf.js');
+                console.log('📚 Arquivo lido como ArrayBuffer — iniciando processamento com pdf.js biblioteca que espera dados Uint8Array. ⚠ ⚠');
 
+                //Uint8Array - estrutura de dados em JavaScript usada para armazenar uma sequência de números inteiros sem sinal.
                 const typedArray = new Uint8Array(event.target.result);
+                //event - é o objeto do evento quando a leitura termina
+                //target - elemento que disparou o esse evento (aqui é o próprio FileReader)
+                //event.target.result - é o conteúdo lido do arquivo.
+                // Ler um arquivo com FileReader.readAsArrayBuffer(), ele retorna os dados brutos do arquivo em formato ArrayBuffer. Mas o pdfjsLib.getDocument() — a biblioteca que estou usando para ler PDFs — espera um Uint8Array, que é uma forma mais específica de representar bytes.
 
+                console.log('Dados binários (genéricos) extraidos, converção para Uint8Array feita! ✅')
+
+                //"try tenta executar o código normalmente"
                 try {
                     const pdf = await pdfjsLib.getDocument({ data: typedArray }).promise;
                     console.log(`📄 PDF carregado — total de páginas: ${pdf.numPages}`);
@@ -54,13 +62,43 @@ document.addEventListener('DOMContentLoaded', function () {
                         console.log(`🔍 Extraindo texto da página ${i}`);
                         const page = await pdf.getPage(i);
                         const content = await page.getTextContent();
-                        const textoPagina = content.items.map(item => item.str).join(' ');
+                        const textoPagina = content.items.map(item => item.str).join('\n');
                         textoCompleto += `\n\n--- Página ${i} ---\n\n${textoPagina}`;
                     }
+                    console.log('Texto extraído:', textoCompleto); // ← adicione isso
+                    // ⚠️ Interrompe processamento ao encontrar a frase de parada
+                    const fraseParada = 'totalizador de aplicações automáticas';
+                    const indiceParada = textoCompleto.toLowerCase().indexOf(fraseParada.toLowerCase());
 
-                    console.log('✅ Texto extraído com sucesso — exibindo conteúdo');
+                    if (indiceParada !== -1) {
+                        console.log('🛑 Frase de parada encontrada — interrompendo processamento após esse ponto');
+                        textoCompleto = textoCompleto.slice(0, indiceParada);
+                    } else {
+                        console.log('✅ Nenhuma frase de parada encontrada — processando todas as páginas');
+                    }
+
+                    const paginas = textoCompleto.split(/--- Página \d+ ---/).filter(p => p.trim() !== '');
+
+                    paginas.forEach((paginaTexto, idx) => {
+                        const transacoes = extrairTransacoesFormatadas(paginaTexto);
+                        console.log(`📄 Página ${idx + 1}`);
+                        console.table(
+                            transacoes.map((t, i) => ({
+                                índice: i,
+                                data: t.data,
+                                descrição: t.descricao,
+                                entrada: t.entrada,
+                                saída: t.saida,
+                                saldo: t.saldo
+                            }))
+                        );
+                    });
+
+                    console.log('✅ Texto extraído com sucesso — Preparando para exibir o botão');
                     exibirTexto(textoCompleto);
-                } catch (erro) {
+                }
+                //"cacth" lida erros dentro do "try" - sem travar o script
+                catch (erro) {
                     console.error('❌ Erro ao processar o PDF:', erro);
                 }
             };
@@ -74,9 +112,80 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+function extrairTransacoesFormatadas(texto) {
+    const linhas = texto.split('\n').map(l => l.trim()).filter(l => l !== '');
+    const transacoes = [];
+
+    let bufferDescricao = '';
+    let bufferData = '';
+    let ultimaLinhaFoiValor = false;
+
+    const valorRegex = /^(\d{1,3}(?:\.\d{3})*,\d{2})(-?)$/;
+    const dataIsoladaRegex = /^\d{2}\/\d{2}$/;
+    const dataEmbutidaRegex = /\d{2}\/\d{2}/;
+
+    for (let i = 0; i < linhas.length; i++) {
+        const linha = linhas[i];
+
+        // Detecta valor
+        const valorMatch = linha.match(valorRegex);
+        if (valorMatch) {
+            const valor = valorMatch[1];
+            const isSaida = valorMatch[2] === '-';
+
+            // Tenta extrair data da descrição anterior
+            let dataFinal = bufferData;
+            if (!dataFinal && bufferDescricao) {
+                const matchData = bufferDescricao.match(dataEmbutidaRegex);
+                if (matchData) {
+                    dataFinal = matchData[0];
+                    bufferDescricao = bufferDescricao.replace(dataEmbutidaRegex, '').trim();
+                }
+            }
+
+            // Verifica se é saldo
+            if (bufferDescricao.toLowerCase().includes('saldo')) {
+                transacoes.push({
+                    data: dataFinal || '(sem data)',
+                    descricao: bufferDescricao || '(sem descrição)',
+                    entrada: '',
+                    saida: '',
+                    saldo: valor
+                });
+            } else {
+                transacoes.push({
+                    data: dataFinal || '(sem data)',
+                    descricao: bufferDescricao || '(sem descrição)',
+                    entrada: isSaida ? '' : valor,
+                    saida: isSaida ? valor : '',
+                    saldo: ''
+                });
+            }
+
+            // Limpa buffers
+            bufferDescricao = '';
+            bufferData = '';
+            ultimaLinhaFoiValor = true;
+            continue;
+        }
+
+        // Detecta data isolada
+        if (dataIsoladaRegex.test(linha)) {
+            bufferData = linha;
+            continue;
+        }
+
+        // Se não for valor nem data isolada, é descrição
+        bufferDescricao = linha;
+        ultimaLinhaFoiValor = false;
+    }
+
+    return transacoes;
+}
+
 // Função para exibir o texto extraído e permitir download
 function exibirTexto(texto) {
-    console.log('🖥️ Exibindo texto extraído no elemento #process-area');
+    //console.log('🖥️ Exibindo texto extraído no elemento #process-area');
     const areaProcessamento = document.getElementById('process-area');
 
     //const pre = document.createElement('pre');
@@ -85,15 +194,28 @@ function exibirTexto(texto) {
     //Agora exibe apenas o botão para download do arquivo txt.
     console.log('📁 Criando arquivo .txt para download');
     const blob = new Blob([texto], { type: 'text/plain' });
+    console.log('Etiqueta pronta ✅')
+    //blob - guarda o texto extraido com a etiqueta: 'Sou um arquivo TXT
     const url = URL.createObjectURL(blob);
+    //Endereço para o browser buscar o arquivo .txt
+    console.log('Endereço encontrado ✅')
 
     const link = document.createElement('a');
+    //Ponto de partida para criação do dowunload.
+    //Cria o elemeto link
 
-    link.href = url;
-    link.download = 'texto-extraido.txt';
-    link.textContent = '📥 Baixar como .txt';
-    link.className = 'btn-download';
-    areaProcessamento.appendChild(link);
+    //Aponta para o endereço temporário que o browser criou para acessar o conteúdo do arquivo.
+    link.href = url; //Caminho para caixinha que preparei antes
+    //Quando clicarem nese link busque esse conteúdo
+    console.log('Conteúdo para download localizado ✅')
+    link.download = 'Arquivo-convertido.txt'; // Nome do arquivo que o usuário vai baixar.
+    console.log('Nome do Arquivo aplicado ✅')
+    link.textContent = '📥 Baixar arquivo convertido 📥'; //Texto que aparece dentro do botão.
+    console.log('Nome para o botão download aplicado ✅')
+    link.className = 'btn-download'; //Da a classe 'btn-donwload' ao botão.
+    console.log('Classe btn-download adicionada ao botão ✅')
+    areaProcessamento.appendChild(link); //Coloca o botão na tela, dentro da área de processamento.
+    console.log('Botão adicionado a area de procesasmento ✅')
 
     console.log('✅ Link de download criado e exibido com sucesso');
 }

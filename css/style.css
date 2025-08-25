@@ -105,11 +105,19 @@ transition: all 200ms ease;
     display: block;
     line-height: 1.5;
 }
-.btn-download{
-    background-color: rgb(137, 187, 137);
-    color: #fff;
-    border: 1px #000 solid;
-    border-radius: 5px;
-    margin-top: 10px;
-    padding: 5px;
-}
+    .btn-download{
+        display: inline-block;
+        background-color: rgb(137, 187, 137);
+        color: #fff;
+        border: 1px #000 solid;
+        border-radius: 5px;
+        margin-top: 10px;
+        padding: 5px;
+        transition: all 500ms ease;
+        text-decoration: none;
+    }
+    .btn-download:hover{
+        background-color: rgb(5, 255, 5);
+        color: #000;
+        transform: translateY(-5px);
+    }
