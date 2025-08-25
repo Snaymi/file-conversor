@@ -78,10 +78,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
 
                     const paginas = textoCompleto.split(/--- Página \d+ ---/).filter(p => p.trim() !== '');
+                    const todasTransacoes = [];
 
                     paginas.forEach((paginaTexto, idx) => {
                         const transacoes = extrairTransacoesFormatadas(paginaTexto);
                         console.log(`📄 Página ${idx + 1}`);
+
+                        // ✅ Aqui está o console.table correto
                         console.table(
                             transacoes.map((t, i) => ({
                                 índice: i,
@@ -92,7 +95,13 @@ document.addEventListener('DOMContentLoaded', function () {
                                 saldo: t.saldo
                             }))
                         );
+
+                        // ✅ Aqui acumulamos as transações fora do console.table
+                        todasTransacoes.push(...transacoes);
                     });
+
+                    // ✅ Aqui geramos o Excel com todas as transações acumuladas
+                    gerarExcel(todasTransacoes);
 
                     console.log('✅ Texto extraído com sucesso — Preparando para exibir o botão');
                     exibirTexto(textoCompleto);
@@ -181,6 +190,26 @@ function extrairTransacoesFormatadas(texto) {
     }
 
     return transacoes;
+}
+function gerarExcel(transacoes, nomeArquivo = 'Transacoes.xlsx') {
+    console.log('📊 Gerando planilha Excel...');
+
+    const worksheet = XLSX.utils.json_to_sheet(transacoes);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Transações');
+
+    const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = nomeArquivo;
+    link.textContent = '📊 Baixar Excel das Transações';
+    link.className = 'btn-download';
+    document.getElementById('process-area').appendChild(link);
+
+    console.log('✅ Planilha Excel pronta para download');
 }
 
 // Função para exibir o texto extraído e permitir download
