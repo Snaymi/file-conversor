@@ -121,48 +121,100 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+//Processa um texto bruto contendo informações financeiras (como extratos bancários)
+//  e estrutura essas informações em objetos de transações formatadas
+console.log('🔁 Entrando na função para extrair as transações 🔁')
 function extrairTransacoesFormatadas(texto) {
-    const linhas = texto.split('\n').map(l => l.trim()).filter(l => l !== '');
-    const transacoes = [];
-
-    let bufferDescricao = '';
-    let bufferData = '';
+    console.log('🔁 Dividindo texto bruto em linhas 🔁');
+    const linhas = texto.split('\n') // Divide o texto bruto em linhas, usando quebra de linha (\n)
+    .map(l => l.trim()) //Remove espaços em branco do ínicio e fim de cada linha
+    //trim - Remove espaços em branco no ínicio e no fim de uma string
+    //map - cria um novo array com resultados da transformação
+    .filter(l => l !== '');//Elimina linhas que ficaram vázias após o trim
+    //Resultado - array só ocm linhas relevantes, limpas e prontas para o processo.
+    console.log('🔁 Criando novo Array com os resultados do map 🔁');
+console.log('🔁 Removendo espaços em branco no ínicio e no fim de cada linha 🔁');
+    console.log('🔁 Eliminando linhas que ficaram vazias do novo array 🔁');
+    const transacoes = []; // Array vazio para armazenamento
+    console.log('Array vazio criado ✅');
+    let bufferDescricao = ''; //Guarda a descrição
+    let bufferData = ''; //Guarda a dadta
     let ultimaLinhaFoiValor = false;
+    //"A última linha que li ainda não foi um valor"
+    //pq false? - Nenhuma linha foi lida ainda
+    //Então não faz sentido assumir que já lemos um valor
+    console.log ('Buffers prontos ✅');
 
-    const valorRegex = /^(\d{1,3}(?:\.\d{3})*,\d{2})(-?)$/;
+    //Regex - Procura padrões em textos
+    //Detectos de formatos específicos
+    //(^) - Começo da linha
+    //(\d{1,3}(/:\.\d{3})*,\d{2})) - Números com ponto e virgula no formato brasileiro 
+    //(-?) - pode ter um hífen no final
+    // $ - fim da linha
+    const valorRegex = /^(\d{1,3}(?:\.\d{3})*,\d{2}|\d+,\d{2})(-?)$/;
+
     const dataIsoladaRegex = /^\d{2}\/\d{2}$/;
+    //a string inteira tem que ser SOMENTE a DATA
     const dataEmbutidaRegex = /\d{2}\/\d{2}/;
-
+    //Não exige que a data esteja sozinha
+console.log('Regex - Scanner pronto para detectar padrões ✅');
     for (let i = 0; i < linhas.length; i++) {
+//percorre cada linha do array 'linhas', que contém o conteúdo do PDF
         const linha = linhas[i];
-
+//linha - representa o conteúdo atual sendo analisado
         // Detecta valor
         const valorMatch = linha.match(valorRegex);
+        //verifica se a linha contém um valor no formato brasileiro
+        
+        console.log('Analisando valor da linha 🔁' );
+        console.log('Padrão brasileiro encontrado ✅');
+        // Só vai entrar nesse próximo bloco SE a linha analisada contiver um valor monetário detectado pelo 'valorRegex'
         if (valorMatch) {
-            const valor = valorMatch[1];
+            const valor = valorMatch[1]; //Extrai um valor número da transação
             const isSaida = valorMatch[2] === '-';
+            //se tiver um '-' no final indica que é uma saída
 
-            // Tenta extrair data da descrição anterior
+            // Tenta extrair data da descrição anterior SE não houver, vai tentar extrair da descrição
             let dataFinal = bufferData;
+
+            //Se não encontrou data e existe uma descrição anterior, tenta buscar a data nela mesmo.
+            console.log('Tentando extrair a data 🔁');
             if (!dataFinal && bufferDescricao) {
                 const matchData = bufferDescricao.match(dataEmbutidaRegex);
+
+                //Se existe uma data embutida na descrição
+                //Salva essa data em 'dataFinal'
+                //Remove a data da descrição depois de armazenada
+                console.log('Data extraída ✅')
                 if (matchData) {
+                    console.log('Limpando a data que está na descrição 🔁');
                     dataFinal = matchData[0];
                     bufferDescricao = bufferDescricao.replace(dataEmbutidaRegex, '').trim();
+                    console.log('Limpeza concluída ✅');
                 }
             }
-
+            console.log('Verificando se o valor é Entrada/ Saída/ Saldo 🔁');
             // Verifica se é saldo
             if (bufferDescricao.toLowerCase().includes('saldo')) {
+                console.log('Saldo detectado ✅');
                 transacoes.push({
                     data: dataFinal || '(sem data)',
                     descricao: bufferDescricao || '(sem descrição)',
                     entrada: '',
                     saida: '',
                     saldo: valor
+                    //Cria um objeto de transação com o campo saldo preenchido
+                    //Entrada e saída ficam vazios
                 });
+                //Se não é saldo, então é uma transação comum
+                //Entrada ou saída
             } else {
+                console.log('Entrada Ou Saída detectado ✅');
+                console.log('🔁 Aplicando lógica ternária para identificação 🔁')
                 transacoes.push({
+                    //Pq não preciso declarar variáveis?
+                    //"Crie um objeto com essas chaves: data, descricao, entrada, saida, saldo 
+                    // E atribua os valores conforme a lógica."
                     data: dataFinal || '(sem data)',
                     descricao: bufferDescricao || '(sem descrição)',
                     entrada: isSaida ? '' : valor,
@@ -172,42 +224,64 @@ function extrairTransacoesFormatadas(texto) {
             }
 
             // Limpa buffers
+            console.log('Transação finalizada, preparando para próxima ✅');
             bufferDescricao = '';
             bufferData = '';
             ultimaLinhaFoiValor = true;
+            //Ao identificar que a transação está completa os valores que foram guardados temporariamente 
+            //São apagados e prepara o terrono para a próxima transação
             continue;
         }
 
         // Detecta data isolada
         if (dataIsoladaRegex.test(linha)) {
+            console.log('Data isolada Detectada e Extraída ✅');
             bufferData = linha;
             continue;
         }
 
         // Se não for valor nem data isolada, é descrição
+        console.log('Valor nem data isolada detectada - Indicativo para DESCRIÇÃO ✅ ')
         bufferDescricao = linha;
         ultimaLinhaFoiValor = false;
     }
-
+    console.log('Devolvendo toda Transação... ✅')
     return transacoes;
+    //Trabalho da função concluído, devolve todo resultado
 }
+
+//Converte um conjunto de transações em uma planilha Excel (.xlsx) 
+// E cria dinamicamente um link para download dessa planilha no navegador.
 function gerarExcel(transacoes, nomeArquivo = 'Transacoes.xlsx') {
     console.log('📊 Gerando planilha Excel...');
 
     const worksheet = XLSX.utils.json_to_sheet(transacoes);
+    //Usa a biblioteca SheetJS(XLSX) para converter o array 'transações' em uma planilha
+    //cada objeto vira uma linha e cada chave vira uma coluna.
+    console.log('Biblioteca SheetJS iniciando processo... ✅');
     const workbook = XLSX.utils.book_new();
+    //Cria uma variável workbook  e adiciona a aba transações no excel
+    
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Transações');
+    console.log('Aba Criada no Excel ✅');
 
     const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+    console.log('buffer binário.xlsx pronto ✅');
+    //convert o workbook em um 'buffer binário' no formato .xlsx
+    //Ele é o conteúdo bruto do EXCEL.
     const blob = new Blob([excelBuffer], { type: 'application/octet-stream' });
+    console.log('blob gerado, link temporário em produção... 🔁')
+    //Cria um Blob, que é um tipo de arquivo temporário na memória do navegador.
+
     const url = URL.createObjectURL(blob);
+    //Gera uma URL temporária para esse blob que será usado para baixar o arquivo
 
     const link = document.createElement('a');
     link.href = url;
     link.download = nomeArquivo;
-    link.textContent = '📊 Baixar Excel das Transações';
+    link.textContent = '📊 Baixar Excel das Transações.xlsx 📊';
     link.className = 'btn-download';
-    document.getElementById('process-area').appendChild(link);
+    document.getElementById('download-btn').appendChild(link);
 
     console.log('✅ Planilha Excel pronta para download');
 }
@@ -239,11 +313,11 @@ function exibirTexto(texto) {
     console.log('Conteúdo para download localizado ✅')
     link.download = 'Arquivo-convertido.txt'; // Nome do arquivo que o usuário vai baixar.
     console.log('Nome do Arquivo aplicado ✅')
-    link.textContent = '📥 Baixar arquivo convertido 📥'; //Texto que aparece dentro do botão.
+    link.textContent = '📥 Baixar arquivo convertido .txt 📥'; //Texto que aparece dentro do botão.
     console.log('Nome para o botão download aplicado ✅')
     link.className = 'btn-download'; //Da a classe 'btn-donwload' ao botão.
     console.log('Classe btn-download adicionada ao botão ✅')
-    areaProcessamento.appendChild(link); //Coloca o botão na tela, dentro da área de processamento.
+    document.getElementById('download-btn').appendChild(link); //Coloca o botão na tela, dentro da área de processamento.
     console.log('Botão adicionado a area de procesasmento ✅')
 
     console.log('✅ Link de download criado e exibido com sucesso');

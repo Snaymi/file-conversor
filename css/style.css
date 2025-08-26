@@ -113,11 +113,19 @@ transition: all 200ms ease;
         border-radius: 5px;
         margin-top: 10px;
         padding: 5px;
-        transition: all 500ms ease;
+        transition: all 200ms ease;
         text-decoration: none;
     }
     .btn-download:hover{
         background-color: rgb(5, 255, 5);
         color: #000;
         transform: translateY(-5px);
+    }
+    .btn-download:active{
+        transform: translateY(0px)
+    }
+    .download-btn{
+        display: flex;
+        column-gap: 30px;
+        justify-content: center;
     }
