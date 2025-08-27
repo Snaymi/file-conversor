@@ -17,6 +17,7 @@ pre{
   word-wrap: break-word;
   font-family: monospace;
 }
+
 .container{
     width: 1000px;
     margin: 0 auto;
@@ -52,7 +53,7 @@ pre{
     font-size: 1.2rem;
     color: #4a5568;
 }
-.btn{
+.btn-arquivo{
 width: 200px; 
 border-radius: 5px;
 background-color: #4a5568;
@@ -61,7 +62,7 @@ padding: 10px 20px;
 font-weight: 600;
 transition: all 200ms ease;
 }
-.btn:hover{
+.btn-arquivo:hover{
     background-color: #2d3748;
     cursor: pointer;
 }
@@ -105,7 +106,7 @@ transition: all 200ms ease;
     display: block;
     line-height: 1.5;
 }
-    .btn-download{
+    .btn{
         display: inline-block;
         background-color: rgb(137, 187, 137);
         color: #fff;
@@ -116,12 +117,12 @@ transition: all 200ms ease;
         transition: all 200ms ease;
         text-decoration: none;
     }
-    .btn-download:hover{
+    .btn:hover{
         background-color: rgb(5, 255, 5);
         color: #000;
         transform: translateY(-5px);
     }
-    .btn-download:active{
+    .btn:active{
         transform: translateY(0px)
     }
     .download-btn{
@@ -129,3 +130,18 @@ transition: all 200ms ease;
         column-gap: 30px;
         justify-content: center;
     }
+    .process-area h2{
+        margin: 30px 0;
+    }
+    .comparator-area{
+        display: flex;
+        flex-direction: column;
+        row-gap: 20px;
+        justify-content: center;
+    }
+    .btn-comparator{
+        margin-left: auto;
+        margin-right: auto;
+        padding: 20px;
+    }
+    

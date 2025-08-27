@@ -20,7 +20,9 @@
             <div class="upload-text">
                 Arraste seus arquivos aqui ou clique para selecionar
             </div>
-            <button class="btn" id="btn-arquivo">Selecionar Arquivos</button>
+            <button class="btn-arquivo" id="btn-arquivo">
+                Selecionar Arquivo
+            </button>
             <input type="file" id="file-input"/>
             <div class="file-info">
                 <strong>Tipos de arquivos suportados:</strong>
@@ -42,6 +44,22 @@
             <div class="download-area" id="download-area">
                 <div class="download-btn" id="download-btn"></div>
             </div>
+            <div class="comparator-area">
+                <h2>🔁 Área de comparação 🔁</h2>
+                <div class="box-arquivos">
+                    <button class="btn-arquivo" id="btn-arquivo1">
+                        Selecionar primeiro arquivo
+                    </button>
+                    <input type="file" id="file-comparator1"/>
+                    <button class="btn-arquivo" id="btn-arquivo2">
+                        Selecionar segundo arquivo
+                    </button>
+                    <input type="file" id="file-comparator2"/>
+                </div>
+                <button class="btn-comparator" id="btn-comparator">
+                    Comparar os dois arquivos
+                </button>
+            </div>
         </div>
     </div>
     <!--bibliotecas necessárias-->
@@ -51,6 +69,8 @@
     
 
     <!--Meu script-->
-    <script src="script.js"></script>
+    <script src="/js/conversor.js"></script>
+    <script src="/js/comparator.js"></script>
+
 </body>
 </html>
