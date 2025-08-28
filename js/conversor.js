@@ -65,40 +65,99 @@ document.addEventListener('DOMContentLoaded', function () {
                         const textoPagina = content.items.map(item => item.str).join('\n');
                         textoCompleto += `\n\n--- Página ${i} ---\n\n${textoPagina}`;
                     }
-                    console.log('Texto extraído:', textoCompleto); // ← adicione isso
-                    // ⚠️ Interrompe processamento ao encontrar a frase de parada
-                    const fraseParada = 'totalizador de aplicações automáticas';
-                    const indiceParada = textoCompleto.toLowerCase().indexOf(fraseParada.toLowerCase());
+                    // Mostra todo o texto extraído do arquivo antes de qualquer corte
+                    console.log('📄 Texto extraído (antes do corte):', textoCompleto);
 
-                    if (indiceParada !== -1) {
-                        console.log('🛑 Frase de parada encontrada — interrompendo processamento após esse ponto');
-                        textoCompleto = textoCompleto.slice(0, indiceParada);
+                    // Definimos a frase que vai servir como "gatilho" para parar o processamento
+                    const fraseParada = 'Saldo em C/C';
+                    console.log(`🔍 Frase de parada definida: "${fraseParada}"`);
+
+                    // Quebra o texto inteiro em um array, cada elemento é uma linha do arquivo
+                    let linhasTexto = textoCompleto.split('\n');
+                    console.log(`📏 Total de linhas encontradas: ${linhasTexto.length}`);
+
+                    // Procura a linha que contém a frase de parada (ignora maiúsculas/minúsculas)
+                    const idxParada = linhasTexto.findIndex(
+                        linha => linha.toLowerCase().includes(fraseParada.toLowerCase())
+                    );
+                    console.log(`🔎 Índice da linha do gatilho encontrado: ${idxParada !== -1 ? idxParada : 'não encontrado'}`);
+
+                    if (idxParada !== -1) {
+                        // Queremos apagar:
+                        // - a linha do gatilho ("Saldo em C/C")
+                        // - mais 3 linhas acima dele
+                        // Então calculamos o índice final até onde vamos manter o conteúdo
+                        const cortarAte = Math.max(0, idxParada - 6);
+                        console.log(`✂️ Vamos cortar a partir da linha ${cortarAte + 1} (posição no array: ${cortarAte})`);
+
+                        // Mostra no console todas as linhas que serão excluídas
+                        console.log('🗑 Linhas que serão removidas (3 acima + gatilho):');
+                        for (let i = cortarAte; i <= idxParada; i++) {
+                            console.log(`   Linha ${i + 1}: "${linhasTexto[i]}"`);
+                        }
+
+                        // Faz o corte: mantém apenas as linhas antes do ponto calculado
+                        linhasTexto = linhasTexto.slice(0, cortarAte);
+                        console.log(`📉 Novo total de linhas após o corte: ${linhasTexto.length}`);
+
+                        // Junta de volta em uma única string para o processamento continuar
+                        textoCompleto = linhasTexto.join('\n');
+                        console.log('✅ Texto reconstruído após o corte aplicado com sucesso');
                     } else {
-                        console.log('✅ Nenhuma frase de parada encontrada — processando todas as páginas');
+                        // Se não achar a frase de parada, não faz nenhum corte
+                        console.log('✅ Nenhuma frase de parada encontrada — mantendo todas as linhas');
                     }
 
-                    const paginas = textoCompleto.split(/--- Página \d+ ---/).filter(p => p.trim() !== '');
+
+                    // Separa o texto completo em páginas usando o marcador do próprio PDF já extraído
+                    console.log('🧭 Iniciando split do texto completo em páginas...');
+                    const paginas = textoCompleto
+                        .split(/--- Página \d+ ---/)       // divide pelo marcador “--- Página X ---”
+                        .filter(p => p.trim() !== '');      // remove páginas vazias
+
+                    console.log(`📚 Total de páginas detectadas: ${paginas.length}`);
+
                     const todasTransacoes = [];
+                    let lastDataGlobal = '';              // ← memória de data entre páginas
 
                     paginas.forEach((paginaTexto, idx) => {
-                        const transacoes = extrairTransacoesFormatadas(paginaTexto);
-                        console.log(`📄 Página ${idx + 1}`);
+                        console.log('\n====================================================');
+                        console.log(`📄 Processando Página ${idx + 1}/${paginas.length}`);
+                        console.log(`🔁 lastDataGlobal ANTES da página: ${lastDataGlobal || '(nenhuma)'}`);
 
-                        // ✅ Aqui está o console.table correto
-                        console.table(
-                            transacoes.map((t, i) => ({
-                                índice: i,
-                                data: t.data,
-                                descrição: t.descricao,
-                                entrada: t.entrada,
-                                saída: t.saida,
-                                saldo: t.saldo
-                            }))
-                        );
+                        // Chama a função passando a última data global como ponto de partida
+                        const { transacoes, lastData } = extrairTransacoesFormatadas(paginaTexto, lastDataGlobal);
 
-                        // ✅ Aqui acumulamos as transações fora do console.table
+                        console.log(`✅ Página ${idx + 1} processada.`);
+                        console.log(`🧾 Transações extraídas nesta página: ${transacoes.length}`);
+                        console.log(`📅 lastData retornada pela página: ${lastData || '(nenhuma)'}`);
+
+                        // Mostra uma tabela amigável das transações desta página
+                        if (transacoes.length > 0) {
+                            console.table(
+                                transacoes.map((t, i) => ({
+                                    índice: i,
+                                    data: t.data,
+                                    descrição: t.descricao,
+                                    entrada: t.entrada,
+                                    saída: t.saida,
+                                    saldo: t.saldo
+                                }))
+                            );
+                        } else {
+                            console.log('ℹ️ Nenhuma transação encontrada nesta página.');
+                        }
+
+                        // Acumula transações e atualiza a “memória de data” para a próxima página
                         todasTransacoes.push(...transacoes);
+                        lastDataGlobal = lastData || lastDataGlobal;  // ← encadeia a última data
+
+                        console.log(`🔁 lastDataGlobal DEPOIS da página: ${lastDataGlobal || '(nenhuma)'}`);
+                        console.log('====================================================\n');
                     });
+
+                    // A partir daqui você já tem todas as transações encadeadas com data correta
+                    console.log(`📦 Total geral de transações: ${todasTransacoes.length}`);
 
                     // ✅ Aqui geramos o Excel com todas as transações acumuladas
                     gerarExcel(todasTransacoes);
@@ -124,98 +183,78 @@ document.addEventListener('DOMContentLoaded', function () {
 //Processa um texto bruto contendo informações financeiras (como extratos bancários)
 //  e estrutura essas informações em objetos de transações formatadas
 console.log('🔁 Entrando na função para extrair as transações 🔁')
-function extrairTransacoesFormatadas(texto) {
-    console.log('Iniciando página')
-    console.log('🔁 Dividindo texto bruto em linhas 🔁');
-    const linhas = texto.split('\n') // Divide o texto bruto em linhas, usando quebra de linha (\n)
-    .map(l => l.trim()) //Remove espaços em branco do ínicio e fim de cada linha
-    //trim - Remove espaços em branco no ínicio e no fim de uma string
-    //map - cria um novo array com resultados da transformação
-    .filter(l => l !== '');//Elimina linhas que ficaram vázias após o trim
-    //Resultado - array só ocm linhas relevantes, limpas e prontas para o processo.
-    console.log('🔁 Criando novo Array com os resultados do map 🔁');
-    console.log('🔁 Removendo espaços em branco no ínicio e no fim de cada linha 🔁');
-    console.log('🔁 Eliminando linhas que ficaram vazias do novo array 🔁');
-    const transacoes = []; // Array vazio para armazenamento
-    console.log('Array vazio criado ✅');
-    let bufferDescricao = ''; //Guarda a descrição
-    let bufferData = ''; //Guarda a dadta
-    let ultimaLinhaFoiValor = false;
-    //"A última linha que li ainda não foi um valor"
-    //pq false? - Nenhuma linha foi lida ainda
-    //Então não faz sentido assumir que já lemos um valor
-    console.log ('Buffers prontos ✅');
+function extrairTransacoesFormatadas(texto, lastDataInicial = '') {
+    console.log('================ INÍCIO DA EXTRAÇÃO =================');
+    console.log(`🔹 Última data recebida de páginas anteriores: ${lastDataInicial || '(nenhuma)'}`);
 
-    //Regex - Procura padrões em textos
-    //Detectos de formatos específicos
-    //(^) - Começo da linha
-    //(\d{1,3}(/:\.\d{3})*,\d{2})) - Números com ponto e virgula no formato brasileiro 
-    //(-?) - pode ter um hífen no final
-    // $ - fim da linha
+    console.log('🔁 Dividindo texto bruto em linhas e limpando espaços...');
+    const linhas = texto
+        .split('\n')                        // Quebra em linhas
+        .map(l => l.trim())                  // Remove espaços no início e no fim
+        .filter(l => l !== '');               // Elimina linhas vazias
+    console.log(`📄 Total de linhas úteis nesta página: ${linhas.length}`);
+
+    const transacoes = [];
+    let bufferDescricao = ''; // Descrição temporária
+    let bufferData = '';      // Data isolada temporária
+    let lastData = lastDataInicial; // Última data conhecida (vem da página anterior, se existir)
+
+    console.log('✅ Buffers prontos e memória de última data inicializada');
+
+    // REGEX utilizados
     const valorRegex = /^(\d{1,3}(?:\.\d{3})*,\d{2}|\d+,\d{2})(-?)$/;
-
     const dataIsoladaRegex = /^\d{2}\/\d{2}$/;
-    //a string inteira tem que ser SOMENTE a DATA
     const dataEmbutidaRegex = /\d{2}\/\d{2}/;
-    //Não exige que a data esteja sozinha
-    console.log('Regex - Scanner pronto para detectar padrões ✅');
+
+    console.log('🔍 Regex preparados para detectar valores e datas');
+
     for (let i = 0; i < linhas.length; i++) {
-    //percorre cada linha do array 'linhas', que contém o conteúdo do PDF
         const linha = linhas[i];
-    //linha - representa o conteúdo atual sendo analisado
-        // Detecta valor
+        console.log(`\n➡️ [Linha ${i + 1}] "${linha}"`);
+
+        // 1) Verifica se é valor monetário
         const valorMatch = linha.match(valorRegex);
-        //verifica se a linha contém um valor no formato brasileiro
-        
-        console.log('Analisando valor da linha 🔁' );
-        console.log('Padrão brasileiro encontrado ✅');
-        // Só vai entrar nesse próximo bloco SE a linha analisada contiver um valor monetário detectado pelo 'valorRegex'
+
         if (valorMatch) {
-            const valor = valorMatch[1]; //Extrai um valor número da transação
+            console.log('💰 Valor detectado');
+            const valor = valorMatch[1];
             const isSaida = valorMatch[2] === '-';
-            //se tiver um '-' no final indica que é uma saída
 
-            // Tenta extrair data da descrição anterior SE não houver, vai tentar extrair da descrição
-            let dataFinal = bufferData;
+            // Determina a data da transação
+            let dataFinal = bufferData; // 1ª prioridade: data isolada detectada antes
 
-            //Se não encontrou data e existe uma descrição anterior, tenta buscar a data nela mesmo.
-            console.log('Tentando extrair a data 🔁');
+            // 2ª prioridade: tenta extrair data embutida na descrição
             if (!dataFinal && bufferDescricao) {
+                console.log('🔎 Buscando data embutida na descrição...');
                 const matchData = bufferDescricao.match(dataEmbutidaRegex);
-
-                //Se existe uma data embutida na descrição
-                //Salva essa data em 'dataFinal'
-                //Remove a data da descrição depois de armazenada
-                console.log('Data extraída ✅')
                 if (matchData) {
-                    console.log('Limpando a data que está na descrição 🔁');
                     dataFinal = matchData[0];
+                    lastData = dataFinal; // atualiza memória global
                     bufferDescricao = bufferDescricao.replace(dataEmbutidaRegex, '').trim();
-                    console.log('Limpeza concluída ✅');
+                    console.log(`📅 Data embutida encontrada: ${dataFinal} (atualizando lastData)`);
                 }
             }
-            console.log('Verificando se o valor é Entrada/ Saída/ Saldo 🔁');
-            // Verifica se é saldo
-            if (bufferDescricao.toLowerCase().includes('saldo')) {
-                console.log('Saldo detectado ✅');
+
+            // 3ª prioridade: se nada encontrado, usa a última data conhecida
+            if (!dataFinal) {
+                dataFinal = lastData;
+                console.log(`↩️ Usando última data conhecida como fallback: ${dataFinal || '(nenhuma)'}`);
+            }
+
+            // Determina se é saldo
+            const isSaldo = bufferDescricao.toLowerCase().includes('saldo');
+            if (isSaldo) {
+                console.log('💹 Transação de SALDO identificada');
                 transacoes.push({
                     data: dataFinal || '(sem data)',
                     descricao: bufferDescricao || '(sem descrição)',
                     entrada: '',
                     saida: '',
                     saldo: valor
-                    //Cria um objeto de transação com o campo saldo preenchido
-                    //Entrada e saída ficam vazios
                 });
-                //Se não é saldo, então é uma transação comum
-                //Entrada ou saída
             } else {
-                console.log('Entrada Ou Saída detectado ✅');
-                console.log('🔁 Aplicando lógica ternária para identificação 🔁')
+                console.log('💳 Transação de ENTRADA/SAÍDA identificada');
                 transacoes.push({
-                    //Pq não preciso declarar variáveis?
-                    //"Crie um objeto com essas chaves: data, descricao, entrada, saida, saldo 
-                    // E atribua os valores conforme a lógica."
                     data: dataFinal || '(sem data)',
                     descricao: bufferDescricao || '(sem descrição)',
                     entrada: isSaida ? '' : valor,
@@ -224,45 +263,55 @@ function extrairTransacoesFormatadas(texto) {
                 });
             }
 
-            // Limpa buffers
-            console.log('Transação finalizada, preparando para próxima ✅');
+            // Atualiza a última data para as próximas transações
+            lastData = dataFinal || lastData;
+            console.log(`📝 lastData atualizado para: ${lastData}`);
+
+            // Limpa buffers temporários para próxima transação
             bufferDescricao = '';
             bufferData = '';
-            ultimaLinhaFoiValor = true;
-            //Ao identificar que a transação está completa os valores que foram guardados temporariamente 
-            //São apagados e prepara o terrono para a próxima transação
+
             continue;
         }
 
-        // Detecta data isolada
+        // 2) Verifica se é uma data isolada
         if (dataIsoladaRegex.test(linha)) {
-            console.log('Data isolada Detectada e Extraída ✅');
             bufferData = linha;
+            lastData = linha; // atualiza a última data conhecida
+            console.log(`📅 Data isolada detectada e armazenada: ${linha}`);
             continue;
         }
 
-        // Se não for valor nem data isolada, é descrição
-        console.log('Valor nem data isolada detectada - Indicativo para DESCRIÇÃO ✅ ')
+        // 3) Caso contrário, trata como descrição
         bufferDescricao = linha;
-        ultimaLinhaFoiValor = false;
+        console.log(`📝 Descrição armazenada: "${bufferDescricao}"`);
     }
-    console.log('Devolvendo toda Transação... ✅')
-    return transacoes;
-    //Trabalho da função concluído, devolve todo resultado
+
+    console.log('================ FIM DA EXTRAÇÃO =================\n');
+    // Retorna também a última data para continuar nas próximas páginas
+    return { transacoes, lastData };
 }
+
 
 //Converte um conjunto de transações em uma planilha Excel (.xlsx) 
 // E cria dinamicamente um link para download dessa planilha no navegador.
 function gerarExcel(transacoes, nomeArquivo = 'Transacoes.xlsx') {
     console.log('📊 Gerando planilha Excel...');
+    const transacoesFiltradas = transacoes
+        // 1️⃣ Remove todas as linhas cuja data seja "(sem data)"
+        .filter(t => t.data !== '(sem data)')
+        // 2️⃣ Remove a coluna saldo
+        .map(({ saldo, ...rest }) => rest);
 
-    const worksheet = XLSX.utils.json_to_sheet(transacoes);
+    console.log(`🔍 Total original: ${transacoes.length}`);
+    console.log(`✅ Total após filtro: ${transacoesFiltradas.length}`);
+    const worksheet = XLSX.utils.json_to_sheet(transacoesFiltradas);
     //Usa a biblioteca SheetJS(XLSX) para converter o array 'transações' em uma planilha
     //cada objeto vira uma linha e cada chave vira uma coluna.
     console.log('Biblioteca SheetJS iniciando processo... ✅');
     const workbook = XLSX.utils.book_new();
     //Cria uma variável workbook  e adiciona a aba transações no excel
-    
+
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Transações');
     console.log('Aba Criada no Excel ✅');
 
