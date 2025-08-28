@@ -144,4 +144,22 @@ transition: all 200ms ease;
         margin-right: auto;
         padding: 20px;
     }
+    @keyframes blinking {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+    .blink{
+        font-size: 25px;
+        font-weight: 700;
+        width: fit-content;
+        padding: 20px;
+        margin: 0 auto;
+        background-color: rgb(240, 240, 41);
+        animation: blinking 1.5s infinite;
+        border-radius: 10px;
+    }
     
