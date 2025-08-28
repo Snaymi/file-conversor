@@ -300,7 +300,13 @@ function gerarExcel(transacoes, nomeArquivo = 'Transacoes.xlsx') {
     const transacoesFiltradas = transacoes
         // 1️⃣ Remove todas as linhas cuja data seja "(sem data)"
         .filter(t => t.data !== '(sem data)')
-        // 2️⃣ Remove a coluna saldo
+        // 2️⃣ Mantém somente linhas que tenham valor na entrada OU na saída
+        .filter(t => {
+            const temEntrada = t.entrada && String(t.entrada).trim() !== '';
+            const temSaida = t.saida && String(t.saida).trim() !== '';
+            return temEntrada || temSaida;
+        })
+        // 3️⃣ Remove a coluna saldo
         .map(({ saldo, ...rest }) => rest);
 
     console.log(`🔍 Total original: ${transacoes.length}`);
