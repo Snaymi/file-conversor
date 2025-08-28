@@ -184,6 +184,10 @@ document.addEventListener('DOMContentLoaded', function () {
 //  e estrutura essas informações em objetos de transações formatadas
 console.log('🔁 Entrando na função para extrair as transações 🔁')
 function extrairTransacoesFormatadas(texto, lastDataInicial = '') {
+    //detecta  o ano presente no texto
+    const anoMatch = texto.match(/20\d{2}/); //procura qualquer ano 20XX
+    const anoAtual = anoMatch ? anoMatch[0] : new Date().getFullYear();
+    console.log(`📅 Ano detectado no extrato: ${anoAtual}`);
     console.log('================ INÍCIO DA EXTRAÇÃO =================');
     console.log(`🔹 Última data recebida de páginas anteriores: ${lastDataInicial || '(nenhuma)'}`);
 
@@ -240,6 +244,10 @@ function extrairTransacoesFormatadas(texto, lastDataInicial = '') {
                 dataFinal = lastData;
                 console.log(`↩️ Usando última data conhecida como fallback: ${dataFinal || '(nenhuma)'}`);
             }
+            //Adiciona o ano se a data estiver no formato dd/mm
+            if (dataFinal && /^\d{2}\/\d{2}$/.test(dataFinal)) {
+                dataFinal = `${dataFinal}/${anoAtual}`;
+            }
 
             // Determina se é saldo
             const isSaldo = bufferDescricao.toLowerCase().includes('saldo');
@@ -276,8 +284,8 @@ function extrairTransacoesFormatadas(texto, lastDataInicial = '') {
 
         // 2) Verifica se é uma data isolada
         if (dataIsoladaRegex.test(linha)) {
-            bufferData = linha;
-            lastData = linha; // atualiza a última data conhecida
+            bufferData = `${linha}/${anoAtual}`; //Já armazena com ano
+            lastData = bufferData; // atualiza a última data conhecida
             console.log(`📅 Data isolada detectada e armazenada: ${linha}`);
             continue;
         }
@@ -306,7 +314,14 @@ function gerarExcel(transacoes, nomeArquivo = 'Transacoes.xlsx') {
             const temSaida = t.saida && String(t.saida).trim() !== '';
             return temEntrada || temSaida;
         })
-        // 3️⃣ Remove a coluna saldo
+        // 3️⃣ Ordena por data crescente
+        .sort((a, b) => {
+            // Converte de "dd/mm/aaaa" para "aaaa-mm-dd" e cria objetos Date
+            const dataA = new Date(a.data.split('/').reverse().join('-'));
+            const dataB = new Date(b.data.split('/').reverse().join('-'));
+            return dataA - dataB; // crescente
+        })
+        // 4️⃣ Remove a coluna saldo
         .map(({ saldo, ...rest }) => rest);
 
     console.log(`🔍 Total original: ${transacoes.length}`);
