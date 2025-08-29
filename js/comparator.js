@@ -79,10 +79,6 @@ const ComparadorArquivos = (function () {
         }
         return null;                                           // Não achou nenhuma coluna compatível
     };
-
-
-
-
     // Extrai coluna de valor e data normalizados
     const extrairColunaComData = function (rows, options) {
         const { colValor, colData, abs } = options;
