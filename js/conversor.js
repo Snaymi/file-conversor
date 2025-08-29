@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('✅ DOM CARREGADA — todos os elementos estão prontos para interação');
+
 
     const btn = document.getElementById('btn-arquivo');
     const arquivo = document.getElementById('file-input');
