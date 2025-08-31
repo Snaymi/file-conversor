@@ -5,11 +5,6 @@
  */
 const ComparadorArquivos = (function () {
 
-    /**
-     * [2] Função utilitária getElement:
-     * - Centraliza a busca por elementos e valida se existem.
-     * - Evita erros silenciosos e repetições de document.getElementById.
-     */
     //Guardar o valores lidos e normalizados.
     let valoresItau = [];
     let valoresTransacoes = [];
@@ -19,66 +14,63 @@ const ComparadorArquivos = (function () {
     // - Aceita string com milhar (.) e decimal (,), ex: "34.392,87"
     // - Remove espaços, remove pontos de milhar e troca vírgula por ponto
     // - Retorna Number ou null se inválido
-
     const toNumberBR = function (v) {
-        if (v === null || v === undefined) return null; //prontopara ignorar se o valor for nulo ou indefinido
-        if (typeof v === 'number') return v; // já é número, retorna o valor;
-        const s = String(v).trim(); //Converte para string e remove espaços
-        const clean = s.replace(/\./g, '').replace(',', '.'); //Remove o '.' na casa do milhar e substitui virgula por ponto 
-        const n = parseFloat(clean); //Converte para numer JS
-        return Number.isFinite(n) ? n : null; //Garantindo que seja um número válido.
-    }
+        if (v === null || v === undefined) return null;
+        if (typeof v === 'number') return v;
+        const s = String(v).trim();
+        const clean = s.replace(/\./g, '').replace(',', '.');
+        const n = parseFloat(clean);
+        return Number.isFinite(n) ? n : null;
+    };
+
     // Função utilitária para converter número serial do Excel em data BR
-    // O Excel conta dias desde 01/01/1900 (no Windows), então precisamos ajustar para o JS
     const excelDateToJSDate = function (serial) {
-        // 25569 = diferença de dias entre 01/01/1900 e 01/01/1970
         const utc_days = Math.floor(serial - 25569);
-        const utc_value = utc_days * 86400; // segundos
-        const date_info = new Date(utc_value * 1000); // milissegundos
-        // Retorna no formato brasileiro "dd/mm/aaaa"
+        const utc_value = utc_days * 86400;
+        const date_info = new Date(utc_value * 1000);
         return date_info.toLocaleDateString('pt-BR');
     };
 
     // Normalizando a comparação
     const normalizeValue = function (v, useAbs = false) {
-        const n = toNumberBR(v); // Converte v para número
-        if (n === null) return null; // Se inválido, retorna null
-        //Math.abs(x) Devolve o valor absoluto de um determinado número
-        const final = useAbs ? Math.abs(n) : n; //Se tiver sinal negativo remove
-        return final.toFixed(2); // Retorna string com 2 casas para comparação consistente
+        const n = toNumberBR(v);
+        if (n === null) return null;
+        const final = useAbs ? Math.abs(n) : n;
+        return final.toFixed(2);
     };
 
-    // - Usa SheetJS (XLSX) que precisa estar carregado no HTML (apenas UMA vez)
-    // - Retorna um array de objetos: [{ ColunaA: val, ColunaB: val, ... }, ...]
+    // Lê arquivo Excel usando SheetJS
     const lerExcel = function (file) {
         return new Promise((resolve, reject) => {
-            const reader = new FileReader();                   // Cria o leitor de arquivo no navegador
-            reader.onload = function (e) {                     // Quando o arquivo terminar de carregar
-                const data = new Uint8Array(e.target.result);  // Converte para Array de bytes
-                const workbook = XLSX.read(data, { type: 'array' }); // Lê o workbook com SheetJS
-                const sheetName = workbook.SheetNames[0];      // Pega a primeira aba
-                const sheet = workbook.Sheets[sheetName];      // Pega a planilha
-                const rows = XLSX.utils.sheet_to_json(sheet, { // Converte planilha para JSON de linhas
-                    defval: null                               // Mantém null onde não tiver valor
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheetName = workbook.SheetNames[0];
+                const sheet = workbook.Sheets[sheetName];
+                const rows = XLSX.utils.sheet_to_json(sheet, {
+                    defval: null
                 });
-                resolve(rows);                                 // Entrega as linhas
+                resolve(rows);
             };
-            reader.onerror = reject;                           // Erro de leitura do arquivo
-            reader.readAsArrayBuffer(file);                    // Lê o arquivo como ArrayBuffer
+            reader.onerror = reject;
+            reader.readAsArrayBuffer(file);
         });
     };
-    // - Tenta achar, por aproximação, a chave correta no objeto a partir dos candidatos informados
+
+    // Tenta achar, por aproximação, a chave correta no objeto a partir dos candidatos informados
     const findColumnKey = function (rows, candidates) {
-        if (!rows.length) return null;                         // Sem linhas, não há o que mapear
-        const keys = Object.keys(rows[0] || {});               // Pega os nomes das colunas do primeiro registro
-        const norm = s => String(s).trim().toLowerCase();      // Normalizador básico
-        const keysNorm = keys.map(k => norm(k));               // Normaliza todas as chaves
-        for (const cand of candidates) {                       // Testa cada candidato
-            const i = keysNorm.indexOf(norm(cand));            // Procura posição no array
-            if (i !== -1) return keys[i];                      // Se achou, retorna o nome exato
+        if (!rows.length) return null;
+        const keys = Object.keys(rows[0] || {});
+        const norm = s => String(s).trim().toLowerCase();
+        const keysNorm = keys.map(k => norm(k));
+        for (const cand of candidates) {
+            const i = keysNorm.indexOf(norm(cand));
+            if (i !== -1) return keys[i];
         }
-        return null;                                           // Não achou nenhuma coluna compatível
+        return null;
     };
+
     // Extrai coluna de valor e data normalizados
     const extrairColunaComData = function (rows, options) {
         const { colValor, colData, abs } = options;
@@ -91,7 +83,6 @@ const ComparadorArquivos = (function () {
         return rows
             .map(r => {
                 const valorNorm = normalizeValue(r[keyValor], abs);
-                // Se a célula de data for um número, converte do formato serial do Excel
                 const dataStr = typeof r[keyData] === 'number'
                     ? excelDateToJSDate(r[keyData])
                     : r[keyData];
@@ -100,8 +91,7 @@ const ComparadorArquivos = (function () {
             .filter(item => item !== null);
     };
 
-    // - Mostra duas tabelas: "Só no ITAU" e "Só no Transações"
-    // Compara listas e exibe no console
+    // Compara listas e exibe no console e na tabela
     const compararListas = function () {
         const mapItau = new Map();
         valoresItau.forEach(item => {
@@ -136,31 +126,32 @@ const ComparadorArquivos = (function () {
 
         console.log('📋 Só no Transações:');
         console.table(soTrans.flatMap(v => ordenarPorData(v, mapTrans.get(v))));
+
+        const dadosItau = soItau.flatMap(v => ordenarPorData(v, mapItau.get(v)));
+        const dadosTrans = soTrans.flatMap(v => ordenarPorData(v, mapTrans.get(v)));
+
+        document.querySelector('.comparator-result').style.display = 'block';
+        renderizarTabela(dadosItau, 'tabela-itau');
+        renderizarTabela(dadosTrans, 'tabela-transacoes');
     };
 
-    //É o getElementById, Mas usando uma função para buscar um Id.
-    console.log('Buscando ID dos elementos 🔁');
+    // Função utilitária para buscar elementos
     const getElement = function (id) {
-        const el = document.getElementById(id); //Procura o elemento pelo ID - Se encontrar el vai ser o próprio elemento do HTML.
-        if (!el) { // Se não encontrar
+        const el = document.getElementById(id);
+        if (!el) {
             console.error(`❌ Elemento com id "${id}" não encontrado no DOM`);
-            //Se o elemento não existir, mostra um erro no console com ID
-            return null; //Retorna null para indicar que o elemento não foi encontrado
+            return null;
         }
-        return el; //Se o elemento foi encontrado, retorna o próprio elemento
+        return el;
     };
 
-    /**
-     * - Mapeia cada botão ao respectivo input (botão -> input).
-     * - Facilita adicionar novos pares sem duplicar código.
-     * - Aqui também ficam todos os listeners (clique e change).
-     */
+    // Mapeia cada botão ao respectivo input e registra listeners
     const addButtonListeners = function () {
         console.log('✅ Comparador pronto para receber arquivos');
 
         const buttonInputMap = new Map([
-            ['btn-arquivo1', 'file-comparator1'], // ITAU
-            ['btn-arquivo2', 'file-comparator2']  // Transações
+            ['btn-arquivo1', 'file-comparator1'],
+            ['btn-arquivo2', 'file-comparator2']
         ]);
 
         buttonInputMap.forEach(function (inputId, btnId) {
@@ -220,14 +211,49 @@ const ComparadorArquivos = (function () {
         }
     };
 
-    const start = function () {
-        document.addEventListener('DOMContentLoaded', addButtonListeners);
-    };
+    // Renderiza tabela no DOM
+    function renderizarTabela(dados, idTabela) {
+        const tabela = document.getElementById(idTabela);
+        tabela.innerHTML = '';
 
+        if (!dados.length) {
+            tabela.innerHTML = '<tr><td>Nenhum dado encontrado</td></tr>';
+            return;
+        }
+
+        const colunas = Object.keys(dados[0]);
+
+        const thead = document.createElement('thead');
+        const trHead = document.createElement('tr');
+        colunas.forEach(col => {
+            const th = document.createElement('th');
+            th.textContent = col;
+            trHead.appendChild(th);
+        });
+        thead.appendChild(trHead);
+        tabela.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        dados.forEach(linha => {
+            const tr = document.createElement('tr');
+            colunas.forEach(col => {
+                const td = document.createElement('td');
+                td.textContent = linha[col];
+                tr.appendChild(td);
+            });
+            tbody.appendChild(tr);
+        });
+        tabela.appendChild(tbody);
+    }
+
+    // Expondo apenas a inicialização dos listeners
     return {
-        init: start
+        init: addButtonListeners
     };
 
 })();
 
-ComparadorArquivos.init();
+// Inicia o módulo ao carregar a página
+document.addEventListener('DOMContentLoaded', function () {
+    ComparadorArquivos.init();
+});

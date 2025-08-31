@@ -162,4 +162,8 @@ transition: all 200ms ease;
         animation: blinking 1.5s infinite;
         border-radius: 10px;
     }
+
+    .comparator-result{
+        display:none;
+    }
     
