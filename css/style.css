@@ -153,17 +153,30 @@ transition: all 200ms ease;
   }
 }
     .blink{
-        font-size: 25px;
+       
         font-weight: 700;
         width: fit-content;
         padding: 20px;
         margin: 0 auto;
         background-color: rgb(240, 240, 41);
-        animation: blinking 1.5s infinite;
+        animation: blinking 5s infinite;
         border-radius: 10px;
+        
     }
 
     .comparator-result{
         display:none;
+        flex-direction: column;
+        border: 1px solid #000;
+        border-radius: 10px;
+        font-size: 20px;
+        row-gap: 10px;
+        background-color: #F5F5F5;
+        transition: 300ms ease-in;
+        color: #777676;
+    }
+    .comparator-result:hover{
+        background-color: #fff;
+        color: #000
     }
     

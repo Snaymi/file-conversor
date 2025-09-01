@@ -23,13 +23,7 @@ const ComparadorArquivos = (function () {
         return Number.isFinite(n) ? n : null;
     };
 
-    // Função utilitária para converter número serial do Excel em data BR
-    const excelDateToJSDate = function (serial) {
-        const utc_days = Math.floor(serial - 25569);
-        const utc_value = utc_days * 86400;
-        const date_info = new Date(utc_value * 1000);
-        return date_info.toLocaleDateString('pt-BR');
-    };
+
 
     // Normalizando a comparação
     const normalizeValue = function (v, useAbs = false) {
@@ -70,6 +64,14 @@ const ComparadorArquivos = (function () {
         }
         return null;
     };
+    // Função utilitária para converter número serial do Excel em data BR
+    function excelDateToJSDate(serial) {
+        // Excel erroneamente considera 1900 como bissexto, então subtraímos 1 dia
+        const excelEpoch = new Date(Date.UTC(1899, 11, 30)); // 30/12/1899
+        const correctedDate = new Date(excelEpoch.getTime() + ((serial + 1) * 86400000));
+        return correctedDate.toLocaleDateString('pt-BR'); // Exibe como DD/MM/YYYY
+    }
+
 
     // Extrai coluna de valor e data normalizados
     const extrairColunaComData = function (rows, options) {
@@ -127,10 +129,21 @@ const ComparadorArquivos = (function () {
         console.log('📋 Só no Transações:');
         console.table(soTrans.flatMap(v => ordenarPorData(v, mapTrans.get(v))));
 
-        const dadosItau = soItau.flatMap(v => ordenarPorData(v, mapItau.get(v)));
-        const dadosTrans = soTrans.flatMap(v => ordenarPorData(v, mapTrans.get(v)));
+        const parseDataBR = (dataBR) => {
+            const [dia, mes, ano] = dataBR.split('/');
+            return `${ano}-${mes}-${dia}`;
+        };
 
-        document.querySelector('.comparator-result').style.display = 'block';
+        const dadosItau = soItau
+            .flatMap(v => ordenarPorData(v, mapItau.get(v)))
+            .sort((a, b) => new Date(parseDataBR(a.Data)) - new Date(parseDataBR(b.Data)));
+
+        const dadosTrans = soTrans
+            .flatMap(v => ordenarPorData(v, mapTrans.get(v)))
+            .sort((a, b) => new Date(parseDataBR(a.Data)) - new Date(parseDataBR(b.Data)));
+
+
+        document.querySelector('.comparator-result').style.display = 'flex';
         renderizarTabela(dadosItau, 'tabela-itau');
         renderizarTabela(dadosTrans, 'tabela-transacoes');
     };
