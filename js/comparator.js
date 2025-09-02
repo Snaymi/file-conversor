@@ -76,22 +76,24 @@ const ComparadorArquivos = (function () {
 
     // Extrai coluna de valor e data normalizados
     const extrairColunaComData = function (rows, options) {
-        const { colValor, colData, colDescricao, abs } = options;
+        const { colValor, colData, colDescricao, colSaidas, abs } = options;
         const keyValor = findColumnKey(rows, [colValor]);
         const keyData = findColumnKey(rows, [colData]);
         const keyDescricao = findColumnKey(rows, [colDescricao]);
+        const keySaida = colSaidas ? findColumnKey(rows, [colSaidas]) : null;
         if (!keyValor || !keyData || !keyDescricao) {
-            console.error(`❌ Coluna não encontrada. Procurado: ${colValor}, ${colData}, ${colDescricao}`);
+            console.error(`❌ Coluna não encontrada. Procurado: ${colValor}, ${colData}, ${colDescricao}, ${colSaidas}`);
             return [];
         }
         return rows
             .map(r => {
                 const valorNorm = normalizeValue(r[keyValor], abs);
+                const saidaNorm = keySaida ? normalizeValue(r[keySaida], abs) : null;
                 const dataStr = typeof r[keyData] === 'number'
                     ? excelDateToJSDate(r[keyData])
                     : r[keyData];
-                    const descricao = r[keyDescricao] || '';
-                return valorNorm !== null ? { valor: valorNorm, descricao: descricao, data: dataStr } : null;
+                const descricao = r[keyDescricao] || '';
+                return valorNorm !== null || saidaNorm !== null ? { valor: valorNorm, descricao: descricao, data: dataStr, saida: saidaNorm } : null;
             })
             .filter(item => item !== null);
     };
@@ -121,7 +123,10 @@ const ComparadorArquivos = (function () {
         const ordenarPorData = (valor, datas) => {
             return datas
                 .sort((a, b) => new Date(a.data) - new Date(b.data))
-                .map(d => ({ Data: d.data, Descrição: d.descricao, Valor: formatBR(valor) }));
+                .map(d => ({ Data: d.data, 
+                    Descrição: d.descricao, 
+                    Valor: formatBR(valor),
+                    Saída: formatBR(d.saida) }));
         };
 
         console.log('📊 Comparação realizada. Datas em ordem crescente');
