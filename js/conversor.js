@@ -184,86 +184,58 @@ document.addEventListener('DOMContentLoaded', function () {
 //  e estrutura essas informações em objetos de transações formatadas
 console.log('🔁 Entrando na função para extrair as transações 🔁')
 function extrairTransacoesFormatadas(texto, lastDataInicial = '') {
-    //detecta  o ano presente no texto
-    const anoMatch = texto.match(/20\d{2}/); //procura qualquer ano 20XX
+    // Detecta o ano presente no texto
+    const anoMatch = texto.match(/20\d{2}/);
     const anoAtual = anoMatch ? anoMatch[0] : new Date().getFullYear();
     console.log(`📅 Ano detectado no extrato: ${anoAtual}`);
     console.log('================ INÍCIO DA EXTRAÇÃO =================');
     console.log(`🔹 Última data recebida de páginas anteriores: ${lastDataInicial || '(nenhuma)'}`);
 
-    console.log('🔁 Dividindo texto bruto em linhas e limpando espaços...');
+    // Quebra em linhas e limpa
     const linhas = texto
-        .split('\n')                        // Quebra em linhas
-        .map(l => l.trim())                  // Remove espaços no início e no fim
-        .filter(l => l !== '');               // Elimina linhas vazias
+        .split('\n')
+        .map(l => l.trim())
+        .filter(l => l !== '');
     console.log(`📄 Total de linhas úteis nesta página: ${linhas.length}`);
 
     const transacoes = [];
-    let bufferDescricao = ''; // Descrição temporária
-    let bufferData = '';      // Data isolada temporária
-    let lastData = lastDataInicial; // Última data conhecida (vem da página anterior, se existir)
+    let bufferDescricao = '';
+    let lastData = lastDataInicial;
 
-    console.log('✅ Buffers prontos e memória de última data inicializada');
-
-    // REGEX utilizados
+    // Regex
     const valorRegex = /^(\d{1,3}(?:\.\d{3})*,\d{2}|\d+,\d{2})(-?)$/;
     const dataIsoladaRegex = /^\d{2}\/\d{2}$/;
-    const dataEmbutidaRegex = /\d{2}\/\d{2}/;
-
-    console.log('🔍 Regex preparados para detectar valores e datas');
 
     for (let i = 0; i < linhas.length; i++) {
         const linha = linhas[i];
         console.log(`\n➡️ [Linha ${i + 1}] "${linha}"`);
 
-        // 1) Verifica se é valor monetário
-        const valorMatch = linha.match(valorRegex);
+        // 1) Se for data isolada, atualiza lastData
+        if (dataIsoladaRegex.test(linha)) {
+            lastData = `${linha}/${anoAtual}`;
+            console.log(`📅 Data isolada detectada: ${lastData}`);
+            continue;
+        }
 
+        // 2) Se for valor monetário, cria transação usando a última data conhecida
+        const valorMatch = linha.match(valorRegex);
         if (valorMatch) {
             console.log('💰 Valor detectado');
             const valor = valorMatch[1];
             const isSaida = valorMatch[2] === '-';
 
-            // Determina a data da transação
-            let dataFinal = bufferData; // 1ª prioridade: data isolada detectada antes
-
-            // 2ª prioridade: tenta extrair data embutida na descrição
-            if (!dataFinal && bufferDescricao) {
-                console.log('🔎 Buscando data embutida na descrição...');
-                const matchData = bufferDescricao.match(dataEmbutidaRegex);
-                if (matchData) {
-                    dataFinal = matchData[0];
-                    lastData = dataFinal; // atualiza memória global
-                    bufferDescricao = bufferDescricao.replace(dataEmbutidaRegex, '').trim();
-                    console.log(`📅 Data embutida encontrada: ${dataFinal} (atualizando lastData)`);
-                }
-            }
-
-            // 3ª prioridade: se nada encontrado, usa a última data conhecida
-            if (!dataFinal) {
-                dataFinal = lastData;
-                console.log(`↩️ Usando última data conhecida como fallback: ${dataFinal || '(nenhuma)'}`);
-            }
-            //Adiciona o ano se a data estiver no formato dd/mm
-            if (dataFinal && /^\d{2}\/\d{2}$/.test(dataFinal)) {
-                dataFinal = `${dataFinal}/${anoAtual}`;
-            }
-
-            // Determina se é saldo
             const isSaldo = bufferDescricao.toLowerCase().includes('saldo');
             if (isSaldo) {
-                console.log('💹 Transação de SALDO identificada');
                 transacoes.push({
-                    data: dataFinal || '(sem data)',
+                    data: lastData || '(sem data)',
                     descricao: bufferDescricao || '(sem descrição)',
                     entrada: '',
                     saida: '',
                     saldo: valor
                 });
             } else {
-                console.log('💳 Transação de ENTRADA/SAÍDA identificada');
                 transacoes.push({
-                    data: dataFinal || '(sem data)',
+                    data: lastData || '(sem data)',
                     descricao: bufferDescricao || '(sem descrição)',
                     entrada: isSaida ? '' : valor,
                     saida: isSaida ? valor : '',
@@ -271,34 +243,18 @@ function extrairTransacoesFormatadas(texto, lastDataInicial = '') {
                 });
             }
 
-            // Atualiza a última data para as próximas transações
-            lastData = dataFinal || lastData;
-            console.log(`📝 lastData atualizado para: ${lastData}`);
-
-            // Limpa buffers temporários para próxima transação
             bufferDescricao = '';
-            bufferData = '';
-
             continue;
         }
 
-        // 2) Verifica se é uma data isolada
-        if (dataIsoladaRegex.test(linha)) {
-            bufferData = `${linha}/${anoAtual}`; //Já armazena com ano
-            lastData = bufferData; // atualiza a última data conhecida
-            console.log(`📅 Data isolada detectada e armazenada: ${linha}`);
-            continue;
-        }
-
-        // 3) Caso contrário, trata como descrição
+        // 3) Caso contrário, acumula como descrição
         bufferDescricao = linha;
-        console.log(`📝 Descrição armazenada: "${bufferDescricao}"`);
     }
 
     console.log('================ FIM DA EXTRAÇÃO =================\n');
-    // Retorna também a última data para continuar nas próximas páginas
     return { transacoes, lastData };
 }
+
 
 
 //Converte um conjunto de transações em uma planilha Excel (.xlsx) 

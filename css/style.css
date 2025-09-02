@@ -17,6 +17,14 @@ pre{
   word-wrap: break-word;
   font-family: monospace;
 }
+tr{
+    transition: 300ms ease-out;
+}
+tr:hover {
+    background-color: rgb(123, 255, 0);
+    cursor: pointer;
+    transform: scale(1.05);
+}
 
 .container{
     width: 1000px;

@@ -53,10 +53,11 @@ const ComparadorArquivos = (function () {
     };
 
     // Tenta achar, por aproximação, a chave correta no objeto a partir dos candidatos informados
+    const removeAccents = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const findColumnKey = function (rows, candidates) {
         if (!rows.length) return null;
         const keys = Object.keys(rows[0] || {});
-        const norm = s => String(s).trim().toLowerCase();
+        const norm = s => removeAccents(String(s).trim().toLowerCase());
         const keysNorm = keys.map(k => norm(k));
         for (const cand of candidates) {
             const i = keysNorm.indexOf(norm(cand));
@@ -75,11 +76,12 @@ const ComparadorArquivos = (function () {
 
     // Extrai coluna de valor e data normalizados
     const extrairColunaComData = function (rows, options) {
-        const { colValor, colData, abs } = options;
+        const { colValor, colData, colDescricao, abs } = options;
         const keyValor = findColumnKey(rows, [colValor]);
         const keyData = findColumnKey(rows, [colData]);
-        if (!keyValor || !keyData) {
-            console.error(`❌ Coluna não encontrada. Procurado: ${colValor}, ${colData}`);
+        const keyDescricao = findColumnKey(rows, [colDescricao]);
+        if (!keyValor || !keyData || !keyDescricao) {
+            console.error(`❌ Coluna não encontrada. Procurado: ${colValor}, ${colData}, ${colDescricao}`);
             return [];
         }
         return rows
@@ -88,7 +90,8 @@ const ComparadorArquivos = (function () {
                 const dataStr = typeof r[keyData] === 'number'
                     ? excelDateToJSDate(r[keyData])
                     : r[keyData];
-                return valorNorm !== null ? { valor: valorNorm, data: dataStr } : null;
+                    const descricao = r[keyDescricao] || '';
+                return valorNorm !== null ? { valor: valorNorm, descricao: descricao, data: dataStr } : null;
             })
             .filter(item => item !== null);
     };
@@ -98,13 +101,13 @@ const ComparadorArquivos = (function () {
         const mapItau = new Map();
         valoresItau.forEach(item => {
             if (!mapItau.has(item.valor)) mapItau.set(item.valor, []);
-            mapItau.get(item.valor).push(item.data);
+            mapItau.get(item.valor).push({ data: item.data, descricao: item.descricao });
         });
 
         const mapTrans = new Map();
         valoresTransacoes.forEach(item => {
             if (!mapTrans.has(item.valor)) mapTrans.set(item.valor, []);
-            mapTrans.get(item.valor).push(item.data);
+            mapTrans.get(item.valor).push({ data: item.data, descricao: item.descricao });
         });
 
         const soItau = [...mapItau.keys()].filter(v => !mapTrans.has(v));
@@ -117,8 +120,8 @@ const ComparadorArquivos = (function () {
 
         const ordenarPorData = (valor, datas) => {
             return datas
-                .sort((a, b) => new Date(a) - new Date(b))
-                .map(d => ({ Data: d, Valor: formatBR(valor) }));
+                .sort((a, b) => new Date(a.data) - new Date(b.data))
+                .map(d => ({ Data: d.data, Descrição: d.descricao, Valor: formatBR(valor) }));
         };
 
         console.log('📊 Comparação realizada. Datas em ordem crescente');
@@ -198,6 +201,7 @@ const ComparadorArquivos = (function () {
                     valoresItau = extrairColunaComData(rows, {
                         colValor: 'Valor',
                         colData: 'Data',
+                        colDescricao: 'descricao',
                         abs: true
                     });
                     console.log(`📂 ITAU carregado: ${file.name} (${valoresItau.length} valores)`);
@@ -205,6 +209,7 @@ const ComparadorArquivos = (function () {
                     valoresTransacoes = extrairColunaComData(rows, {
                         colValor: 'entrada',
                         colData: 'Data',
+                        colDescricao: 'descricao',
                         abs: false
                     });
                     console.log(`📁 Transações carregado: ${file.name} (${valoresTransacoes.length} valores)`);
